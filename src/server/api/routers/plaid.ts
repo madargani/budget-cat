@@ -28,4 +28,21 @@ export const plaidRouter = createTRPCRouter({
       console.log(error);
     }
   }),
+  exchangePublicToken: protectedProcedure
+    .input(
+      z.object({
+        public_token: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const response = await plaidClient.itemPublicTokenExchange({
+          public_token: input.public_token,
+        });
+        console.log(response.data);
+        return { public_token_exchange: "complete" };
+      } catch (error) {
+        console.log(error);
+      }
+    }),
 });

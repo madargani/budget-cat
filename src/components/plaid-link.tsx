@@ -6,12 +6,21 @@ import { api } from "~/trpc/react";
 
 export function PlaidLink() {
   const { data: token } = api.plaid.createLinkToken.useQuery();
+  const exchangeMutation = api.plaid.exchangePublicToken.useMutation({
+    onSuccess: (data) => {},
+    onError: (error) => {
+      console.log(error);
+    },
+  });
 
   const { open, ready } = usePlaidLink({
     token: token?.link_token || null,
     onSuccess: (public_token, metadata) => {
-      console.log("PUBLIC TOKEN");
-      console.log(public_token);
+      if (public_token === null) {
+        console.log("public token returned null");
+        return;
+      }
+      exchangeMutation.mutate({ public_token });
     },
   });
 
