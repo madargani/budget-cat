@@ -1,5 +1,6 @@
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
-import { plaidRouter } from "./routers/plaid";
+import { itemsRouter } from "./routers/items";
+import { transactionsRouter } from "./routers/transactions";
 
 /**
  * This is the primary router for your server.
@@ -7,7 +8,8 @@ import { plaidRouter } from "./routers/plaid";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  plaid: plaidRouter,
+  items: itemsRouter,
+  transactions: transactionsRouter,
 });
 
 // export type definition of API

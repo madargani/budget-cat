@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PlaidLink } from "~/components/plaid-link";
+import { TransactionsTester } from "~/components/transactions-tester";
 
 import { auth } from "~/server/better-auth";
 import { getSession } from "~/server/better-auth/server";
@@ -36,6 +37,7 @@ export default async function Home() {
               ) : (
                 <div className="flex flex-col items-center gap-4">
                   <PlaidLink />
+                  <TransactionsTester />
                   <form>
                     <button
                       className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"

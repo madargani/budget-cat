@@ -4,11 +4,10 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
 } from "~/server/api/trpc";
 import { createItemFromPublicToken, plaidClient } from "~/server/plaid";
 
-export const plaidRouter = createTRPCRouter({
+export const itemsRouter = createTRPCRouter({
   createLinkToken: protectedProcedure.query(async ({ ctx }) => {
     const user = ctx.session.user;
     const clientUserId = user.id;
@@ -17,7 +16,7 @@ export const plaidRouter = createTRPCRouter({
         client_user_id: clientUserId,
       },
       client_name: "budget-cat",
-      products: [Products.Auth],
+      products: [Products.Auth, Products.Transactions],
       language: "en",
       country_codes: [CountryCode.Us],
     };

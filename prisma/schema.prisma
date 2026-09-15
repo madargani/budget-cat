@@ -26,6 +26,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   items         Item[]
+  transactions  Transaction[]
 
   @@unique([email])
   @@map("user")
@@ -36,8 +37,28 @@ model Item {
   transactions_cursor String
   accessToken         String
 
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
+  user         User          @relation(fields: [userId], references: [id])
+  userId       String
+  transactions Transaction[]
+}
+
+model Transaction {
+  id              String   @id
+  accountId       String
+  amount          Float
+  date            DateTime
+  name            String
+  merchantName    String?
+  category        String?
+  isoCurrencyCode String?
+  pending         Boolean  @default(false)
+  itemId          String
+  userId          String
+  item            Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("transaction")
 }
 
 model Session {
