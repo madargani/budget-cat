@@ -1,10 +1,11 @@
+import { TRPCError } from "@trpc/server";
 import { CountryCode, Products } from "plaid";
-import { z } from "zod";
 
 import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { exchangePublicTokenInput } from "~/server/api/schemas/items";
 import { createItemFromPublicToken, plaidClient } from "~/server/plaid";
 
 export const itemsRouter = createTRPCRouter({
@@ -24,15 +25,15 @@ export const itemsRouter = createTRPCRouter({
       const token = await plaidClient.linkTokenCreate(linkTokenRequest);
       return token.data;
     } catch (error) {
-      console.log(error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to create Plaid link token",
+        cause: error,
+      });
     }
   }),
   exchangePublicToken: protectedProcedure
-    .input(
-      z.object({
-        public_token: z.string(),
-      }),
-    )
+    .input(exchangePublicTokenInput)
     .mutation(async ({ input, ctx }) => {
       try {
         await createItemFromPublicToken(
@@ -41,7 +42,11 @@ export const itemsRouter = createTRPCRouter({
         );
         return { public_token_exchange: "complete" };
       } catch (error) {
-        console.log(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to exchange Plaid public token",
+          cause: error,
+        });
       }
     }),
 });

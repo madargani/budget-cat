@@ -1,5 +1,3 @@
-import { TRPCError } from "@trpc/server";
-
 import { db } from "~/server/db";
 import { plaidClient } from "./client";
 
@@ -9,7 +7,7 @@ export async function syncTransactionsForItem(itemId: string, userId: string) {
   });
 
   if (!item) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Item not found" });
+    throw new Error("Item not found");
   }
 
   let cursor = item.transactions_cursor;

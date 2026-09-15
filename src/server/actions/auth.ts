@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "~/server/better-auth";
@@ -26,5 +27,10 @@ export async function signUp(data: {
       password: data.password,
     },
   });
+  redirect("/");
+}
+
+export async function signOut() {
+  await auth.api.signOut({ headers: await headers() });
   redirect("/");
 }
