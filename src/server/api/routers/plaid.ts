@@ -6,7 +6,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { plaidClient } from "~/server/plaid";
+import { createItemFromPublicToken, plaidClient } from "~/server/plaid";
 
 export const plaidRouter = createTRPCRouter({
   createLinkToken: protectedProcedure.query(async ({ ctx }) => {
@@ -36,10 +36,10 @@ export const plaidRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       try {
-        const response = await plaidClient.itemPublicTokenExchange({
-          public_token: input.public_token,
-        });
-        console.log(response.data);
+        await createItemFromPublicToken(
+          ctx.session.user.id,
+          input.public_token,
+        );
         return { public_token_exchange: "complete" };
       } catch (error) {
         console.log(error);
