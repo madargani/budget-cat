@@ -2,6 +2,7 @@
 
 import React from "react";
 import { usePlaidLink } from "react-plaid-link";
+import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
 
 export function PlaidLink() {
@@ -24,12 +25,12 @@ export function PlaidLink() {
   });
 
   return (
-    <button
-      className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+    <Button
+      className="w-full"
       onClick={() => open()}
       disabled={!ready}
     >
       Connect a bank account
-    </button>
+    </Button>
   );
 }

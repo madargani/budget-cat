@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
 
 export function TransactionsTester() {
@@ -26,21 +27,23 @@ export function TransactionsTester() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+    <div className="flex w-full flex-col gap-2">
+      <Button
+        className="w-full"
+        variant="outline"
         onClick={() => syncMutation.mutate()}
         disabled={syncMutation.isPending}
       >
         Sync transactions
-      </button>
-      <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+      </Button>
+      <Button
+        className="w-full"
+        variant="outline"
         onClick={handleFetch}
         disabled={fetchQuery.isFetching}
       >
         Fetch transactions
-      </button>
+      </Button>
     </div>
   );
 }
