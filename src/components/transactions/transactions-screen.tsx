@@ -1,18 +1,20 @@
 "use client";
 
-import { Inbox, ListOrdered } from "lucide-react";
+import { Check, Inbox, ListOrdered } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { InboxDialog } from "~/components/transactions/inbox-dialog";
+import { TransactionDetailDialog } from "~/components/transactions/transaction-detail-dialog";
 import { TransactionRow } from "~/components/transactions/transaction-row";
-import { Button } from "~/components/ui/button";
 import { formatTransactionDate } from "~/lib/format";
 import { getMockTransactions } from "~/lib/mock-transactions";
+import { cn } from "~/lib/utils";
 
 export function TransactionsScreen() {
-  const [inboxOpen, setInboxOpen] = useState(false);
+  const [transactions, setTransactions] = useState(() => getMockTransactions());
+  const [selectedTransaction, setSelectedTransaction] = useState<
+    (typeof transactions)[number] | null
+  >(null);
 
-  const transactions = useMemo(() => getMockTransactions(), []);
   const unassignedCount = transactions.filter(
     (transaction) => transaction.unassigned,
   ).length;
@@ -30,6 +32,23 @@ export function TransactionsScreen() {
     return [...groups.entries()];
   }, [transactions]);
 
+  function assignCategory(id: string, category: string) {
+    setTransactions((current) =>
+      current.map((transaction) =>
+        transaction.id === id
+          ? { ...transaction, category, unassigned: false }
+          : transaction,
+      ),
+    );
+    setSelectedTransaction((current) =>
+      current?.id === id
+        ? { ...current, category, unassigned: false }
+        : current,
+    );
+  }
+
+  const allCaughtUp = unassignedCount === 0;
+
   return (
     <div className="flex flex-col gap-4 pb-6">
       <div className="flex items-center gap-2 px-4 pt-3">
@@ -38,19 +57,25 @@ export function TransactionsScreen() {
       </div>
 
       <div className="px-4">
-        <Button
-          className="w-full"
-          variant="secondary"
-          size="lg"
-          onClick={() => setInboxOpen(true)}
+        <div
+          className={cn(
+            "flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium",
+            allCaughtUp
+              ? "bg-muted text-muted-foreground"
+              : "bg-primary/10 text-primary",
+          )}
         >
-          <Inbox />
-          Assign{" "}
-          <span className="font-semibold tabular-nums">
-            {unassignedCount}
-          </span>{" "}
-          {unassignedCount === 1 ? "transaction" : "transactions"}
-        </Button>
+          {allCaughtUp ? (
+            <Check className="size-4" />
+          ) : (
+            <Inbox className="size-4" />
+          )}
+          {allCaughtUp
+            ? "All caught up!"
+            : `${unassignedCount} ${
+                unassignedCount === 1 ? "transaction" : "transactions"
+              } to assign`}
+        </div>
       </div>
 
       <section className="flex flex-col gap-5 px-4">
@@ -64,6 +89,7 @@ export function TransactionsScreen() {
                 <TransactionRow
                   key={transaction.id}
                   transaction={transaction}
+                  onClick={() => setSelectedTransaction(transaction)}
                 />
               ))}
             </div>
@@ -71,7 +97,11 @@ export function TransactionsScreen() {
         ))}
       </section>
 
-      <InboxDialog open={inboxOpen} onClose={() => setInboxOpen(false)} />
+      <TransactionDetailDialog
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+        onAssign={assignCategory}
+      />
     </div>
   );
 }

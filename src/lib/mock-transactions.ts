@@ -5,6 +5,7 @@ export type MockTransaction = {
   amount: number;
   date: string;
   category: string | null;
+  pending: boolean;
   unassigned: boolean;
 };
 
@@ -14,6 +15,7 @@ type TransactionTemplate = {
   amount: number;
   daysAgo: number;
   category: string;
+  pending?: boolean;
 };
 
 const transactionTemplates: TransactionTemplate[] = [
@@ -58,6 +60,7 @@ const transactionTemplates: TransactionTemplate[] = [
     amount: -9.24,
     daysAgo: 1,
     category: "Travel",
+    pending: true,
   },
 ];
 
@@ -111,13 +114,10 @@ export function getMockTransactions(): MockTransaction[] {
       amount,
       date: toDateString(date),
       category: template.category,
+      pending: template.pending ?? false,
       unassigned: index < 5,
     };
   });
 
   return transactions.sort((a, b) => b.date.localeCompare(a.date));
-}
-
-export function getUnassignedTransactions(): MockTransaction[] {
-  return getMockTransactions().filter((transaction) => transaction.unassigned);
 }

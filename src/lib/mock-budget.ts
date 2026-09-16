@@ -46,16 +46,31 @@ const groupTemplates: {
     name: "Wants",
     categories: [
       { id: "dining", name: "Dining", allocated: 250, spend: "wants" },
-      { id: "entertainment", name: "Entertainment", allocated: 120, spend: "wants" },
+      {
+        id: "entertainment",
+        name: "Entertainment",
+        allocated: 120,
+        spend: "wants",
+      },
       { id: "shopping", name: "Shopping", allocated: 200, spend: "wants" },
-      { id: "subscriptions", name: "Subscriptions", allocated: 60, spend: "wants" },
+      {
+        id: "subscriptions",
+        name: "Subscriptions",
+        allocated: 60,
+        spend: "wants",
+      },
     ],
   },
   {
     id: "savings",
     name: "Savings",
     categories: [
-      { id: "emergency-fund", name: "Emergency Fund", allocated: 500, spend: "savings" },
+      {
+        id: "emergency-fund",
+        name: "Emergency Fund",
+        allocated: 500,
+        spend: "savings",
+      },
       { id: "investing", name: "Investing", allocated: 400, spend: "savings" },
       { id: "vacation", name: "Vacation", allocated: 300, spend: "savings" },
     ],
@@ -82,6 +97,27 @@ function mulberry32(seed: number) {
 
 function round(value: number): number {
   return Math.round(value);
+}
+
+export type MockCategoryGroup = {
+  id: string;
+  name: string;
+  categories: { id: string; name: string }[];
+};
+
+export function getMockCategoryGroups(): MockCategoryGroup[] {
+  return groupTemplates.map((group) => ({
+    id: group.id,
+    name: group.name,
+    categories: group.categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+    })),
+  }));
+}
+
+export function getMockCategories(): { id: string; name: string }[] {
+  return getMockCategoryGroups().flatMap((group) => group.categories);
 }
 
 export function getMockBudget(month: Month): MockBudget {
