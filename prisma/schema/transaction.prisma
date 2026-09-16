@@ -1,0 +1,21 @@
+model Transaction {
+  id              String    @id
+  accountId       String
+  amount          Float
+  date            DateTime
+  name            String
+  merchantName    String?
+  plaidCategory   String?
+  isoCurrencyCode String?
+  pending         Boolean   @default(false)
+  itemId          String?
+  userId          String
+  categoryId      String?
+  item            Item?     @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+  @@index([categoryId])
+  @@map("transaction")
+}
