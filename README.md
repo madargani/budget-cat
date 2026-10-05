@@ -1,29 +1,77 @@
-# Create T3 App
+# Budget Cat 🐱
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Budget Cat is a zero-based budgeting app heavily inspired by [YNAB](https://www.ynab.com/). Every dollar gets a job — assign your income to categories, track transactions, and stay on top of your spending.
 
-## What's next? How do I make an app with this?
+## Tech Stack
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
-
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
-
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
+- [Next.js](https://nextjs.org) (App Router)
 - [tRPC](https://trpc.io)
+- [Prisma](https://prisma.io) with SQLite
+- [Better Auth](https://www.better-auth.com)
+- [Plaid](https://plaid.com) for bank connections
+- [Tailwind CSS](https://tailwindcss.com)
 
-## Learn More
+## Getting Started
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+### Prerequisites
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+- Node.js (v20+ recommended)
+- npm
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Setup
 
-## How do I deploy this?
+1. Clone the project:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+   ```bash
+   git clone <repo-url>
+   cd budget-cat
+   ```
+
+2. Copy the example environment file:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Fill in the required environment variables in `.env`:
+
+   | Variable           | Description                                  |
+   | ------------------ | -------------------------------------------- |
+   | `BETTER_AUTH_SECRET` | Secret used by Better Auth for session encryption |
+   | `PLAID_CLIENT_ID`    | Your Plaid client ID                         |
+   | `PLAID_SECRET`       | Your Plaid secret                            |
+   | `DATABASE_URL`       | Database connection URL (defaults to SQLite) |
+
+4. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+5. Set up the database:
+
+   ```bash
+   npm run db:generate
+   ```
+
+6. Start the dev server:
+
+   ```bash
+   npm run dev
+   ```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+## Useful Scripts
+
+| Script              | Description                          |
+| ------------------- | ------------------------------------ |
+| `npm run dev`       | Start the development server         |
+| `npm run build`     | Build for production                 |
+| `npm run start`     | Start the production server          |
+| `npm run db:generate` | Run Prisma migrations (dev)        |
+| `npm run db:push`   | Push schema changes without migrations |
+| `npm run db:studio` | Open Prisma Studio                   |
+| `npm run lint`      | Lint the codebase                    |
+| `npm run typecheck` | Run TypeScript type checking         |
+| `npm run format:write` | Format code with Prettier        |
