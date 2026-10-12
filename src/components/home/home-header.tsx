@@ -1,9 +1,10 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "~/components/ui/avatar";
-import { getInitials } from "~/lib/format";
-import type { Month } from "~/lib/month";
+import { House } from "lucide-react";
+
 import { MonthSelector } from "~/components/home/month-selector";
+import { PageHeader } from "~/components/layout/page-header";
+import type { Month } from "~/lib/month";
 
 export function HomeHeader({
   user,
@@ -15,11 +16,8 @@ export function HomeHeader({
   onMonthChange: (month: Month) => void;
 }) {
   return (
-    <header className="flex items-center justify-between px-4 py-3">
-      <Avatar>
-        <AvatarFallback>{getInitials(user.name) || getInitials(user.email)}</AvatarFallback>
-      </Avatar>
+    <PageHeader icon={House} title="Home" user={user}>
       <MonthSelector month={month} onChange={onMonthChange} />
-    </header>
+    </PageHeader>
   );
 }

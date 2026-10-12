@@ -3,13 +3,18 @@
 import { Check, Inbox, ListOrdered } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { PageHeader } from "~/components/layout/page-header";
 import { TransactionDetailDialog } from "~/components/transactions/transaction-detail-dialog";
 import { TransactionRow } from "~/components/transactions/transaction-row";
 import { formatTransactionDate } from "~/lib/format";
 import { getMockTransactions } from "~/lib/mock-transactions";
 import { cn } from "~/lib/utils";
 
-export function TransactionsScreen() {
+export function TransactionsScreen({
+  user,
+}: {
+  user: { name: string; email: string };
+}) {
   const [transactions, setTransactions] = useState(() => getMockTransactions());
   const [selectedTransaction, setSelectedTransaction] = useState<
     (typeof transactions)[number] | null
@@ -51,10 +56,7 @@ export function TransactionsScreen() {
 
   return (
     <div className="flex flex-col gap-4 pb-6">
-      <div className="flex items-center gap-2 px-4 pt-3">
-        <ListOrdered className="text-muted-foreground size-5" />
-        <h1 className="font-heading text-xl font-semibold">Transactions</h1>
-      </div>
+      <PageHeader icon={ListOrdered} title="Transactions" user={user} />
 
       <div className="px-4">
         <div

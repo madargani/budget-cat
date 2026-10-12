@@ -1,5 +1,7 @@
 import { ChartPie } from "lucide-react";
+import { redirect } from "next/navigation";
 
+import { PageHeader } from "~/components/layout/page-header";
 import {
   Card,
   CardContent,
@@ -7,15 +9,26 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { getSession } from "~/server/better-auth/server";
 
-export default function AnalyticsPage() {
+export default async function AnalyticsPage() {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
   return (
-    <div className="flex flex-col gap-4 px-4 pt-3">
-      <div className="flex items-center gap-2">
-        <ChartPie className="size-5 text-muted-foreground" />
-        <h1 className="font-heading text-xl font-semibold">Analytics</h1>
-      </div>
-      <Card>
+    <div className="flex flex-col gap-4 pb-6">
+      <PageHeader
+        icon={ChartPie}
+        title="Analytics"
+        user={{
+          name: session.user.name,
+          email: session.user.email,
+        }}
+      />
+      <Card className="mx-4">
         <CardHeader>
           <CardTitle>Coming soon</CardTitle>
           <CardDescription>
