@@ -1,7 +1,7 @@
 "use client";
 
 import { CategoryCard } from "~/components/home/category-card";
-import type { CategoryGroup } from "~/lib/mock-budget";
+import type { CategoryGroup } from "~/server/api/schemas/budget";
 
 export function CategoryGroups({ groups }: { groups: CategoryGroup[] }) {
   return (

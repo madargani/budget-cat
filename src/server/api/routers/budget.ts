@@ -5,107 +5,52 @@ import {
   addCategoryInput,
 } from "~/server/api/schemas/budget";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-
-const UNIQUE_CONSTRAINT_VIOLATION = "P2002";
-
-function isUniqueConstraintError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: unknown }).code === UNIQUE_CONSTRAINT_VIOLATION
-  );
-}
+import {
+  addCategory,
+  addCategoryGroup,
+  getHome,
+} from "~/server/services/budget";
 
 export const budgetRouter = createTRPCRouter({
-  getHome: protectedProcedure.query(async ({ ctx }) => {
-    const groups = await ctx.db.categoryGroup.findMany({
-      where: { userId: ctx.session.user.id },
-      include: {
-        categories: {
-          orderBy: { order: "asc" },
-        },
-      },
-      orderBy: { order: "asc" },
-    });
-
-    return {
-      readyToAssign: 0,
-      groups: groups.map((group) => ({
-        id: group.id,
-        name: group.name,
-        categories: group.categories.map((category) => ({
-          id: category.id,
-          name: category.name,
-          // Allocations and spending aren't modeled yet.
-          allocated: 0,
-          spent: 0,
-        })),
-      })),
-    };
-  }),
+  getHome: protectedProcedure.query(({ ctx }) => getHome(ctx.session.user.id)),
 
   addCategoryGroup: protectedProcedure
     .input(addCategoryGroupInput)
     .mutation(async ({ ctx, input }) => {
-      const groupCount = await ctx.db.categoryGroup.count({
-        where: { userId: ctx.session.user.id },
+      const result = await addCategoryGroup({
+        userId: ctx.session.user.id,
+        name: input.name,
       });
 
-      try {
-        return await ctx.db.categoryGroup.create({
-          data: {
-            name: input.name,
-            order: groupCount,
-            userId: ctx.session.user.id,
-          },
+      if (!result.ok) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A category group with this name already exists.",
         });
-      } catch (error) {
-        if (isUniqueConstraintError(error)) {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "A category group with this name already exists.",
-          });
-        }
-        throw error;
       }
+
+      return result.group;
     }),
 
   addCategory: protectedProcedure
     .input(addCategoryInput)
     .mutation(async ({ ctx, input }) => {
-      const group = await ctx.db.categoryGroup.findFirst({
-        where: { id: input.groupId, userId: ctx.session.user.id },
-        select: { id: true },
+      const result = await addCategory({
+        userId: ctx.session.user.id,
+        groupId: input.groupId,
+        name: input.name,
       });
 
-      if (!group) {
+      if (!result.ok) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "The selected category group could not be found.",
+          code: result.reason === "duplicate" ? "CONFLICT" : "NOT_FOUND",
+          message:
+            result.reason === "duplicate"
+              ? "A category with this name already exists in this group."
+              : "The selected category group could not be found.",
         });
       }
 
-      const categoryCount = await ctx.db.category.count({
-        where: { groupId: group.id },
-      });
-
-      try {
-        return await ctx.db.category.create({
-          data: {
-            name: input.name,
-            order: categoryCount,
-            groupId: group.id,
-          },
-        });
-      } catch (error) {
-        if (isUniqueConstraintError(error)) {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "A category with this name already exists in this group.",
-          });
-        }
-        throw error;
-      }
+      return result.category;
     }),
 });

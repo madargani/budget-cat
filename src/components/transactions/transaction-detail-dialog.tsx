@@ -14,21 +14,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import type { TransactionItem } from "~/hooks/use-transactions";
 import { formatTransactionAmount, formatTransactionDate } from "~/lib/format";
-import { getMockCategoryGroups } from "~/lib/mock-budget";
-import type { MockTransaction } from "~/lib/mock-transactions";
 import { cn } from "~/lib/utils";
+import { type RouterOutputs } from "~/trpc/react";
+
+type CategoryGroup = RouterOutputs["budget"]["getHome"]["groups"][number];
 
 export function TransactionDetailDialog({
   transaction,
+  categoryGroups,
   onClose,
   onAssign,
 }: {
-  transaction: MockTransaction | null;
+  transaction: TransactionItem | null;
+  categoryGroups: CategoryGroup[];
   onClose: () => void;
-  onAssign: (id: string, category: string) => void;
+  onAssign: (transactionId: string, categoryId: string) => void;
 }) {
-  const [display, setDisplay] = useState<MockTransaction | null>(null);
+  const [display, setDisplay] = useState<TransactionItem | null>(null);
 
   useEffect(() => {
     if (transaction) {
@@ -36,25 +40,36 @@ export function TransactionDetailDialog({
     }
   }, [transaction]);
 
-  const groups = useMemo(() => {
-    const base = getMockCategoryGroups();
+  const groups = useMemo<CategoryGroup[]>(() => {
     if (
-      display?.category &&
-      !base.some((group) =>
-        group.categories.some((c) => c.name === display.category),
+      display?.categoryId &&
+      !categoryGroups.some((group) =>
+        group.categories.some((category) => category.id === display.categoryId),
       )
     ) {
       return [
-        ...base,
+        ...categoryGroups,
         {
           id: "uncategorized",
           name: "Other",
-          categories: [{ id: display.category, name: display.category }],
+          categories: [
+            {
+              id: display.categoryId,
+              name: display.category ?? "Uncategorized",
+              allocated: 0,
+              spent: 0,
+            },
+          ],
         },
       ];
     }
-    return base;
-  }, [display]);
+    return categoryGroups;
+  }, [categoryGroups, display]);
+
+  const categories = useMemo(
+    () => groups.flatMap((group) => group.categories),
+    [groups],
+  );
 
   if (!display) {
     return null;
@@ -63,9 +78,17 @@ export function TransactionDetailDialog({
   const isSpend = display.amount < 0;
 
   const handleCategoryChange = (value: string | null) => {
-    if (value) {
-      onAssign(display.id, value);
-    }
+    if (!value) return;
+    const category = categories.find((item) => item.id === value);
+    // Reflect the pick immediately; the assignment mutation converges the
+    // server cache, which re-syncs `display` through the effect above.
+    setDisplay({
+      ...display,
+      categoryId: value,
+      category: category?.name ?? display.category,
+      unassigned: false,
+    });
+    onAssign(display.id, value);
   };
 
   return (
@@ -128,16 +151,15 @@ export function TransactionDetailDialog({
               </p>
 
               <Select
-                value={display.category}
+                value={display.categoryId}
                 onValueChange={handleCategoryChange}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue>
                     {(value: string | null) =>
                       value
-                        ? (groups
-                            .flatMap((group) => group.categories)
-                            .find((c) => c.name === value)?.name ?? value)
+                        ? (categories.find((category) => category.id === value)
+                            ?.name ?? "Select a category")
                         : "Select a category"
                     }
                   </SelectValue>
@@ -149,7 +171,7 @@ export function TransactionDetailDialog({
                       <SelectGroup>
                         <SelectLabel>{group.name}</SelectLabel>
                         {group.categories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
+                          <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>
                         ))}

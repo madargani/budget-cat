@@ -7,3 +7,12 @@ export const getTransactionsInput = z.object({
 });
 
 export type GetTransactionsInput = z.infer<typeof getTransactionsInput>;
+
+export const assignTransactionCategoryInput = z.object({
+  transactionId: z.string().min(1),
+  categoryId: z.string().min(1),
+});
+
+export type AssignTransactionCategoryInput = z.infer<
+  typeof assignTransactionCategoryInput
+>;

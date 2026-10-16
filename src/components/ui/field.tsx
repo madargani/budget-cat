@@ -1,8 +1,11 @@
+// shadcn/ui generated primitive. Kept as a single file even though it exceeds
+// the ~200-line guideline (AGENTS.md §2): splitting generated UI would be
+// clobbered on the next `shadcn add`. See AGENTS.md §8.
 "use client"
 
 import { useMemo } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "cn"
+import { cn } from "~/lib/utils"
 
 import { Label } from "~/components/ui/label"
 import { Separator } from "~/components/ui/separator"

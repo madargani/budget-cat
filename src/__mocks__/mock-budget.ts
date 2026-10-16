@@ -1,35 +1,6 @@
 import type { Month } from "~/lib/month";
 
-export type BudgetCategory = {
-  id: string;
-  name: string;
-  allocated: number;
-  spent: number;
-};
-
-export type CategoryGroup = {
-  id: string;
-  name: string;
-  categories: BudgetCategory[];
-};
-
-export type MockBudget = {
-  readyToAssign: number;
-  groups: CategoryGroup[];
-};
-
-type CategoryTemplate = {
-  id: string;
-  name: string;
-  allocated: number;
-  spend: "needs" | "wants" | "savings";
-};
-
-const groupTemplates: {
-  id: string;
-  name: string;
-  categories: CategoryTemplate[];
-}[] = [
+const groupTemplates = [
   {
     id: "needs",
     name: "Needs",
@@ -99,13 +70,7 @@ function round(value: number): number {
   return Math.round(value);
 }
 
-export type MockCategoryGroup = {
-  id: string;
-  name: string;
-  categories: { id: string; name: string }[];
-};
-
-export function getMockCategoryGroups(): MockCategoryGroup[] {
+export function getMockCategoryGroups() {
   return groupTemplates.map((group) => ({
     id: group.id,
     name: group.name,
@@ -120,7 +85,7 @@ export function getMockCategories(): { id: string; name: string }[] {
   return getMockCategoryGroups().flatMap((group) => group.categories);
 }
 
-export function getMockBudget(month: Month): MockBudget {
+export function getMockBudget(month: Month) {
   const rand = mulberry32(hashMonth(month));
 
   const groups = groupTemplates.map((group) => ({

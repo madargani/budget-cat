@@ -1,8 +1,11 @@
+// shadcn/ui generated primitive. Kept as a single file even though it exceeds
+// the ~200-line guideline (AGENTS.md §2): splitting generated UI would be
+// clobbered on the next `shadcn add`. See AGENTS.md §8.
 "use client";
 
 import * as React from "react";
 import { Select as SelectPrimitive } from "@base-ui/react/select";
-import { cn } from "cn";
+import { cn } from "~/lib/utils";
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
 
 const Select = SelectPrimitive.Root;

@@ -6,8 +6,9 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "~/components/layout/page-header";
 import { TransactionDetailDialog } from "~/components/transactions/transaction-detail-dialog";
 import { TransactionRow } from "~/components/transactions/transaction-row";
+import { useBudget } from "~/hooks/use-budget";
+import { useTransactions } from "~/hooks/use-transactions";
 import { formatTransactionDate } from "~/lib/format";
-import { getMockTransactions } from "~/lib/mock-transactions";
 import { cn } from "~/lib/utils";
 
 export function TransactionsScreen({
@@ -15,10 +16,16 @@ export function TransactionsScreen({
 }: {
   user: { name: string; email: string };
 }) {
-  const [transactions, setTransactions] = useState(() => getMockTransactions());
-  const [selectedTransaction, setSelectedTransaction] = useState<
-    (typeof transactions)[number] | null
-  >(null);
+  const { transactions, isLoading, isError, assignCategory } =
+    useTransactions();
+  const { budget } = useBudget();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const selectedTransaction = useMemo(
+    () =>
+      transactions.find((transaction) => transaction.id === selectedId) ?? null,
+    [transactions, selectedId],
+  );
 
   const unassignedCount = transactions.filter(
     (transaction) => transaction.unassigned,
@@ -37,71 +44,70 @@ export function TransactionsScreen({
     return [...groups.entries()];
   }, [transactions]);
 
-  function assignCategory(id: string, category: string) {
-    setTransactions((current) =>
-      current.map((transaction) =>
-        transaction.id === id
-          ? { ...transaction, category, unassigned: false }
-          : transaction,
-      ),
-    );
-    setSelectedTransaction((current) =>
-      current?.id === id
-        ? { ...current, category, unassigned: false }
-        : current,
-    );
-  }
-
   const allCaughtUp = unassignedCount === 0;
 
   return (
     <div className="flex flex-col gap-4 pb-6">
       <PageHeader icon={ListOrdered} title="Transactions" user={user} />
 
-      <div className="px-4">
-        <div
+      {isLoading || isError ? (
+        <p
           className={cn(
-            "flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium",
-            allCaughtUp
-              ? "bg-muted text-muted-foreground"
-              : "bg-primary/10 text-primary",
+            "px-4 text-sm",
+            isError ? "text-destructive" : "text-muted-foreground",
           )}
         >
-          {allCaughtUp ? (
-            <Check className="size-4" />
-          ) : (
-            <Inbox className="size-4" />
-          )}
-          {allCaughtUp
-            ? "All caught up!"
-            : `${unassignedCount} ${
-                unassignedCount === 1 ? "transaction" : "transactions"
-              } to assign`}
-        </div>
-      </div>
-
-      <section className="flex flex-col gap-5 px-4">
-        {grouped.map(([date, list]) => (
-          <div key={date} className="flex flex-col">
-            <h2 className="text-muted-foreground text-sm font-medium">
-              {formatTransactionDate(date)}
-            </h2>
-            <div className="divide-border flex flex-col divide-y">
-              {list.map((transaction) => (
-                <TransactionRow
-                  key={transaction.id}
-                  transaction={transaction}
-                  onClick={() => setSelectedTransaction(transaction)}
-                />
-              ))}
+          {isError ? "Unable to load transactions." : "Loading transactions…"}
+        </p>
+      ) : (
+        <>
+          <div className="px-4">
+            <div
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium",
+                allCaughtUp
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-primary/10 text-primary",
+              )}
+            >
+              {allCaughtUp ? (
+                <Check className="size-4" />
+              ) : (
+                <Inbox className="size-4" />
+              )}
+              {allCaughtUp
+                ? "All caught up!"
+                : `${unassignedCount} ${
+                    unassignedCount === 1 ? "transaction" : "transactions"
+                  } to assign`}
             </div>
           </div>
-        ))}
-      </section>
+
+          <section className="flex flex-col gap-5 px-4">
+            {grouped.map(([date, list]) => (
+              <div key={date} className="flex flex-col">
+                <h2 className="text-muted-foreground text-sm font-medium">
+                  {formatTransactionDate(date)}
+                </h2>
+                <div className="divide-border flex flex-col divide-y">
+                  {list.map((transaction) => (
+                    <TransactionRow
+                      key={transaction.id}
+                      transaction={transaction}
+                      onClick={() => setSelectedId(transaction.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+        </>
+      )}
 
       <TransactionDetailDialog
         transaction={selectedTransaction}
-        onClose={() => setSelectedTransaction(null)}
+        categoryGroups={budget?.groups ?? []}
+        onClose={() => setSelectedId(null)}
         onAssign={assignCategory}
       />
     </div>

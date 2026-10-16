@@ -7,8 +7,8 @@ import { AddBudgetItem } from "~/components/home/add-budget-item";
 import { CategoryGroups } from "~/components/home/category-groups";
 import { HomeHeader } from "~/components/home/home-header";
 import { ReadyToAssign } from "~/components/home/ready-to-assign";
-import { PlaidLink } from "~/components/plaid-link";
-import { TransactionsTester } from "~/components/transactions-tester";
+import { PlaidLink } from "~/components/bank/plaid-link";
+import { TransactionsTester } from "~/components/bank/transactions-tester";
 import {
   Card,
   CardContent,

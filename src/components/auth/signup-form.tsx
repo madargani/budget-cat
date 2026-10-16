@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "cn";
+import { cn } from "~/lib/utils";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,7 @@ import {
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "~/components/ui/field";
@@ -73,6 +74,7 @@ export function SignupForm({
                 placeholder="John Doe"
                 {...register("name")}
               />
+              <FieldError errors={[errors.name]} />
             </Field>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -86,6 +88,7 @@ export function SignupForm({
                 We&apos;ll use this to contact you. We will not share your email
                 with anyone else.
               </FieldDescription>
+              <FieldError errors={[errors.email]} />
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -93,6 +96,7 @@ export function SignupForm({
               <FieldDescription>
                 Must be at least 8 characters long.
               </FieldDescription>
+              <FieldError errors={[errors.password]} />
             </Field>
             <Field>
               <FieldLabel htmlFor="confirm-password">
@@ -104,6 +108,7 @@ export function SignupForm({
                 {...register("confirmPassword")}
               />
               <FieldDescription>Please confirm your password.</FieldDescription>
+              <FieldError errors={[errors.confirmPassword]} />
             </Field>
             <FieldGroup>
               <Field>

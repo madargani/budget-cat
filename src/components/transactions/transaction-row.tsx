@@ -1,18 +1,21 @@
 import { CircleArrowDown } from "lucide-react";
 
+import type { TransactionItem } from "~/hooks/use-transactions";
 import { formatTransactionAmount } from "~/lib/format";
-import type { MockTransaction } from "~/lib/mock-transactions";
 import { cn } from "~/lib/utils";
 
 export function TransactionRow({
   transaction,
   onClick,
 }: {
-  transaction: MockTransaction;
+  transaction: TransactionItem;
   onClick: () => void;
 }) {
   const isSpend = transaction.amount < 0;
-  const subtitle = transaction.merchantName ?? transaction.category;
+  const subtitle =
+    transaction.merchantName ??
+    transaction.category ??
+    transaction.plaidCategory;
 
   return (
     <button

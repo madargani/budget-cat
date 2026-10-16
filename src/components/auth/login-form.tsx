@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "cn";
+import { cn } from "~/lib/utils";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,7 @@ import {
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "~/components/ui/field";
@@ -58,6 +59,7 @@ export function LoginForm({
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input placeholder="m@example.com" {...register("email")} />
+                <FieldError errors={[errors.email]} />
               </Field>
               <Field>
                 <div className="flex items-center">
@@ -70,6 +72,7 @@ export function LoginForm({
                   </a>
                 </div>
                 <Input {...register("password")} />
+                <FieldError errors={[errors.password]} />
               </Field>
               <Field>
                 <Button type="submit">Login</Button>

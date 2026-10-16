@@ -4,8 +4,8 @@ import { Progress } from "@base-ui/react/progress";
 
 import { Card, CardContent } from "~/components/ui/card";
 import { formatCurrency } from "~/lib/format";
-import type { BudgetCategory } from "~/lib/mock-budget";
 import { cn } from "~/lib/utils";
+import type { BudgetCategory } from "~/server/api/schemas/budget";
 
 export function CategoryCard({ category }: { category: BudgetCategory }) {
   const { name, allocated, spent } = category;
