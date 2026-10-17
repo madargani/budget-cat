@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { cn } from "~/lib/utils";
 import z from "zod";
 import { useForm } from "react-hook-form";
@@ -21,7 +23,7 @@ import {
   FieldLabel,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { signUp } from "~/server/actions/auth";
+import { authClient } from "~/lib/auth";
 
 const schema = z
   .object({
@@ -39,20 +41,34 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<typeof Card>) {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    setError,
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
   });
 
   async function onSubmit(data: z.infer<typeof schema>) {
-    await signUp({
+    const { error } = await authClient.signUp.email({
       name: data.name,
       email: data.email,
       password: data.password,
     });
+
+    if (error) {
+      setError("root", {
+        message:
+          error.message ?? "Unable to create your account. Please try again.",
+      });
+      return;
+    }
+
+    router.push("/");
+    router.refresh();
   }
 
   return (
@@ -111,8 +127,11 @@ export function SignupForm({
               <FieldError errors={[errors.confirmPassword]} />
             </Field>
             <FieldGroup>
+              <FieldError errors={[errors.root]} />
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Creating account…" : "Create Account"}
+                </Button>
                 <FieldDescription className="px-6 text-center">
                   Already have an account? <a href="/login">Sign in</a>
                 </FieldDescription>

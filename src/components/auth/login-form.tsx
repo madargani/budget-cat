@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { cn } from "~/lib/utils";
 import z from "zod";
 import { useForm } from "react-hook-form";
@@ -21,7 +23,7 @@ import {
   FieldLabel,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { signIn } from "~/server/actions/auth";
+import { authClient } from "~/lib/auth";
 
 const schema = z.object({
   email: z.string().email(),
@@ -32,16 +34,32 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    setError,
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
   });
 
   async function onSubmit(data: z.infer<typeof schema>) {
-    await signIn(data);
+    const { error } = await authClient.signIn.email({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      setError("root", {
+        message: error.message ?? "Unable to sign in. Please try again.",
+      });
+      return;
+    }
+
+    router.push("/");
+    router.refresh();
   }
 
   return (
@@ -74,8 +92,11 @@ export function LoginForm({
                 <Input {...register("password")} />
                 <FieldError errors={[errors.password]} />
               </Field>
+              <FieldError errors={[errors.root]} />
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Logging in…" : "Login"}
+                </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account? <a href="/signup">Sign up</a>
                 </FieldDescription>

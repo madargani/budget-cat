@@ -10,10 +10,9 @@ This document is the single source of truth for where code goes and how it is wr
 | `src/components/ui/` | Shared, generic UI primitives (shadcn base: button, input, card, dialog…) | No feature logic, no data fetching, no imports from `src/components/home/` etc. |
 | `src/components/<feature>/` | Feature-specific UI (e.g. `home/`, `transactions/`, `auth/`, `bank/`, `layout/`) | One component per file; filename matches the exported component name (`AddBudgetItem` → `add-budget-item.tsx`). |
 | `src/hooks/` | Custom React hooks — data fetching and UI state logic | Hooks own TanStack Query (tRPC) usage and form logic. Components call hooks; they do not call `api.xxx.useQuery` directly unless trivial. |
-| `src/lib/` | Pure utilities, formatters, date helpers | No React, no Prisma, no tRPC. |
+| `src/lib/` | Pure utilities, formatters, date helpers, and the better-auth client singleton (`auth.ts`) | No React, no Prisma, no tRPC. `auth.ts` imports better-auth's client factory only, not React APIs (see §8). |
 | `src/server/db.ts` | Prisma client singleton | Imported only from server code (`"use server"` or tRPC routers/services). |
 | `src/server/services/` | Business logic — pure functions that take primitives/IDs and return data | Used by tRPC routers. Includes all Plaid link/sync logic. No React, no HTTP, no TanStack Query. |
-| `src/server/actions/` | Server Actions (`"use server"`) | Imported by client components to mutate/redirect. Validate inputs with Zod schemas. Auth lives here instead of tRPC because cookie handling and `redirect()` need a server context (see `actions/auth.ts`). |
 | `src/server/plaid/` | Plaid API client setup (env-driven config) | Server-only. No React, no tRPC, no business logic or DB writes — those live in `src/server/services/`. |
 | `src/server/better-auth/` | Auth server config + `getSession` helper | Server-only. `getSession` is called from server components/layouts. |
 | `src/server/trpc/schemas/` | Zod validation schemas | One file per domain (`budget.ts`, `transactions.ts`, `items.ts`). Export types via `z.infer<typeof schema>`. |
@@ -46,13 +45,11 @@ This document is the single source of truth for where code goes and how it is wr
 ## 4. Client / server boundary
 
 - Put `"use client"` at the top of any file that uses browser APIs, hooks, or interactivity.
-- **Client components never import server internals from `src/server/`**: the Prisma client (`db`), services, tRPC server code, Plaid helpers, or anything marked `server-only`. Data reaches them via page props, Server Actions, or tRPC.
-- Two imports from `src/server/` are allowed in client code:
-  1. **Zod schemas** (and their inferred types) from `src/server/trpc/schemas/*`. They are the shared validation contract between forms and the API — client forms pass them to `zodResolver` so both sides validate identically. This is only safe because those files stay **pure Zod** (their sole import is `zod`); if a schema file ever imports anything else, it becomes server-only and must not be imported by client code.
-  2. **Server Actions** from `src/server/actions/*`. These files start with `"use server"`, so importing their exported functions turns calls into RPC — no server internals leak to the client bundle. This is how `login-form.tsx` / `signup-form.tsx` call `signIn` / `signUp`.
-- To keep these imports separate from server internals, put shared Zod schemas and Server Actions at those exact paths; do not re-export `db`/services through them.
+- **Client components never import server internals from `src/server/`**: the Prisma client (`db`), services, tRPC server code, Plaid helpers, or anything marked `server-only`. Data reaches them via page props, tRPC, or better-auth's client.
+- The one import from `src/server/` allowed in client code is **Zod schemas** (and their inferred types) from `src/server/trpc/schemas/*`. They are the shared validation contract between forms and the API — client forms pass them to `zodResolver` so both sides validate identically. This is only safe because those files stay **pure Zod** (their sole import is `zod`); if a schema file ever imports anything else, it becomes server-only and must not be imported by client code.
+- Auth is the one feature that does not use tRPC: `login-form.tsx` / `signup-form.tsx` call better-auth's React client (`src/lib/auth.ts`), which persists the session through better-auth's handler at `src/app/api/auth/[...all]/route.ts`. See §7.
 - **Server components never use React hooks or browser globals.**
-- Pick one data pattern per feature: tRPC procedure or Server Action. Do not mix both for the same resource without documenting why.
+- Pick one data pattern per feature: a tRPC procedure, or better-auth's client for auth. Do not mix patterns for the same resource without documenting why.
 
 ## 5. Naming
 
@@ -69,7 +66,7 @@ This document is the single source of truth for where code goes and how it is wr
 3. Add business logic to `src/server/services/<feature>.ts` if it does CRUD or external calls.
 4. Add a tRPC router in `src/server/trpc/routers/<feature>.ts` using `.input(zodSchema)`.
 5. Register the router in `src/server/trpc/root.ts`.
-6. Consume data in a hook under `src/hooks/` (TanStack Query via tRPC) or a Server Action under `src/server/actions/`, then render from a page in `src/app/(app)/<feature>/page.tsx`. Pick one pattern per feature (§4).
+6. Consume data in a hook under `src/hooks/` (TanStack Query via tRPC), then render from a page in `src/app/(app)/<feature>/page.tsx`. Pick one pattern per feature (§4).
 7. If a component exceeds ~200 lines, split it into sub-components in the same folder.
 
 ## 7. Conventions that already exist in this repo (keep following them)
@@ -79,6 +76,7 @@ This document is the single source of truth for where code goes and how it is wr
 - `cn()` from `~/lib/utils` for class merging (`~/lib/utils` re-exports the `cn` package; import from `~/lib/utils`, not `cn`).
 - `createCallerFactory` for server-side tRPC calls.
 - Protected routes redirect unauthenticated users (see `src/app/(app)/page.tsx`).
+- Auth uses better-auth's React client (`src/lib/auth.ts`) calling the server handler at `src/app/api/auth/[...all]/route.ts`; server components read the session via `getSession` (`src/server/better-auth/server.ts`).
 
 ## 8. When you break a rule
 
