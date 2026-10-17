@@ -1,8 +1,11 @@
 import { TRPCError } from "@trpc/server";
 
-import { exchangePublicTokenInput } from "~/server/api/schemas/items";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { createItemFromPublicToken, createLinkToken } from "~/server/plaid";
+import { exchangePublicTokenInput } from "~/server/trpc/schemas/items";
+import { createTRPCRouter, protectedProcedure } from "~/server/trpc/core";
+import {
+  createItemFromPublicToken,
+  createLinkToken,
+} from "~/server/services/items";
 
 export const itemsRouter = createTRPCRouter({
   createLinkToken: protectedProcedure.query(async ({ ctx }) => {

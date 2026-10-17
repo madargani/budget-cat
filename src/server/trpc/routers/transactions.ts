@@ -3,11 +3,11 @@ import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
   protectedProcedure,
-} from "~/server/api/trpc";
+} from "~/server/trpc/core";
 import {
   assignTransactionCategoryInput,
   getTransactionsInput,
-} from "~/server/api/schemas/transactions";
+} from "~/server/trpc/schemas/transactions";
 import {
   assignTransactionCategory,
   getTransactions,

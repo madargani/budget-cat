@@ -1,10 +1,12 @@
 import { CountryCode, Products } from "plaid";
 
 import { db } from "~/server/db";
-import { plaidClient } from "./client";
+import { plaidClient } from "~/server/plaid/client";
 
-export { plaidClient };
-
+/**
+ * Creates a Plaid Link token the client uses to open Plaid Link and connect a
+ * bank account.
+ */
 export async function createLinkToken(clientUserId: string) {
   const token = await plaidClient.linkTokenCreate({
     user: {
@@ -19,6 +21,10 @@ export async function createLinkToken(clientUserId: string) {
   return token.data;
 }
 
+/**
+ * Exchanges the public token returned by Plaid Link for an access token and
+ * stores the resulting Item (bank connection) for the user.
+ */
 export async function createItemFromPublicToken(
   userId: string,
   publicToken: string,

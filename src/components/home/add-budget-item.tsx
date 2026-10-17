@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import type { CategoryGroup } from "~/server/api/schemas/budget";
+import type { CategoryGroup } from "~/server/trpc/schemas/budget";
 
 type AddTarget = "group" | "category";
 

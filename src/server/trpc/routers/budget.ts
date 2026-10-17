@@ -4,8 +4,8 @@ import {
   addCategoryGroupInput,
   addCategoryInput,
   getHomeInput,
-} from "~/server/api/schemas/budget";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+} from "~/server/trpc/schemas/budget";
+import { createTRPCRouter, protectedProcedure } from "~/server/trpc/core";
 import {
   addCategory,
   addCategoryGroup,

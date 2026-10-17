@@ -19,7 +19,7 @@ import { Label } from "~/components/ui/label";
 import {
   addCategoryGroupInput,
   type AddCategoryGroupInput,
-} from "~/server/api/schemas/budget";
+} from "~/server/trpc/schemas/budget";
 
 export function AddGroupDialog({
   open,

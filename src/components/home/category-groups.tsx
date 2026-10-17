@@ -1,7 +1,7 @@
 "use client";
 
 import { CategoryCard } from "~/components/home/category-card";
-import type { CategoryGroup } from "~/server/api/schemas/budget";
+import type { CategoryGroup } from "~/server/trpc/schemas/budget";
 
 export function CategoryGroups({ groups }: { groups: CategoryGroup[] }) {
   return (

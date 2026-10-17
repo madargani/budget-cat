@@ -27,7 +27,7 @@ import {
   addCategoryInput,
   type AddCategoryInput,
   type CategoryGroup,
-} from "~/server/api/schemas/budget";
+} from "~/server/trpc/schemas/budget";
 
 export function AddCategoryDialog({
   open,
