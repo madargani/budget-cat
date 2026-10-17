@@ -1,3 +1,4 @@
+import { monthRange, type Month } from "~/lib/month";
 import { db } from "~/server/db";
 
 const UNIQUE_CONSTRAINT_VIOLATION = "P2002";
@@ -12,10 +13,13 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 /**
- * Returns the home-screen budget overview. `allocated`/`spent` are placeholders
- * until those fields are modeled in Prisma.
+ * Returns the home-screen budget overview for a single month. `spent` is the
+ * sum of the month's assigned transactions per category (amounts are stored
+ * with spending negative, so a category's spend is the negated sum). A
+ * positive amount assigned to a category — a refund or inflow — reduces its
+ * `spent`. `allocated`/`readyToAssign` remain 0 until allocations are modeled.
  */
-export async function getHome(userId: string) {
+export async function getHome(userId: string, month: Month) {
   const groups = await db.categoryGroup.findMany({
     where: { userId },
     include: {
@@ -26,6 +30,28 @@ export async function getHome(userId: string) {
     orderBy: { order: "asc" },
   });
 
+  const categoryIds = groups.flatMap((group) =>
+    group.categories.map((category) => category.id),
+  );
+  const { start, end } = monthRange(month);
+
+  const sums =
+    categoryIds.length > 0
+      ? await db.transaction.groupBy({
+          by: ["categoryId"],
+          where: {
+            userId,
+            categoryId: { in: categoryIds },
+            date: { gte: start, lt: end },
+          },
+          _sum: { amount: true },
+        })
+      : [];
+
+  const spentByCategory = new Map(
+    sums.map((sum) => [sum.categoryId, -(sum._sum.amount ?? 0)]),
+  );
+
   return {
     readyToAssign: 0,
     groups: groups.map((group) => ({
@@ -35,7 +61,7 @@ export async function getHome(userId: string) {
         id: category.id,
         name: category.name,
         allocated: 0,
-        spent: 0,
+        spent: spentByCategory.get(category.id) ?? 0,
       })),
     })),
   };

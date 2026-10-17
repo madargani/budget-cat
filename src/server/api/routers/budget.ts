@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import {
   addCategoryGroupInput,
   addCategoryInput,
+  getHomeInput,
 } from "~/server/api/schemas/budget";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
@@ -12,7 +13,9 @@ import {
 } from "~/server/services/budget";
 
 export const budgetRouter = createTRPCRouter({
-  getHome: protectedProcedure.query(({ ctx }) => getHome(ctx.session.user.id)),
+  getHome: protectedProcedure
+    .input(getHomeInput)
+    .query(({ ctx, input }) => getHome(ctx.session.user.id, input)),
 
   addCategoryGroup: protectedProcedure
     .input(addCategoryGroupInput)

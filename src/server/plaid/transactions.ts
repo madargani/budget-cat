@@ -14,6 +14,11 @@ export async function syncTransactionsForItem(itemId: string, userId: string) {
   let hasMore = true;
   const counts = { added: 0, modified: 0, removed: 0 };
 
+  // Plaid reports outflows as positive and inflows as negative, which is the
+  // opposite of this app's convention (negative = spend). Flip the sign once,
+  // here, so every amount stored in the database follows the app convention.
+  const toAppAmount = (plaidAmount: number) => -plaidAmount;
+
   while (hasMore) {
     const response = await plaidClient.transactionsSync({
       access_token: item.accessToken,
@@ -28,7 +33,7 @@ export async function syncTransactionsForItem(itemId: string, userId: string) {
         create: {
           id: transaction.transaction_id,
           accountId: transaction.account_id,
-          amount: transaction.amount,
+          amount: toAppAmount(transaction.amount),
           date: new Date(transaction.date),
           name: transaction.name,
           merchantName: transaction.merchant_name ?? null,
@@ -40,7 +45,7 @@ export async function syncTransactionsForItem(itemId: string, userId: string) {
         },
         update: {
           accountId: transaction.account_id,
-          amount: transaction.amount,
+          amount: toAppAmount(transaction.amount),
           date: new Date(transaction.date),
           name: transaction.name,
           merchantName: transaction.merchant_name ?? null,

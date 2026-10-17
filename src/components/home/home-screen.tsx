@@ -25,7 +25,8 @@ export function HomeScreen({
   user: { name: string; email: string };
 }) {
   const [month, setMonth] = useState<Month>(() => currentMonth());
-  const { budget, isLoading, isError, addGroup, addCategory } = useBudget();
+  const { budget, isLoading, isError, addGroup, addCategory } =
+    useBudget(month);
 
   return (
     <div className="flex flex-col gap-4 pb-6">

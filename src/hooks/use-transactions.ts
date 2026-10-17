@@ -49,7 +49,8 @@ function toTransactionItem(record: TransactionRecord): TransactionItem {
  * Assignment intentionally skips an optimistic cache write: rendering the new
  * category requires its name, which the id-based mutation input does not
  * carry. The dialog shows the picked category immediately, and invalidating on
- * settle converges the cache with the server.
+ * settle converges the cache with the server. The home budget is invalidated
+ * too, so assigning a transaction refreshes the month's spent totals.
  */
 export function useTransactions() {
   const utils = api.useUtils();
@@ -70,7 +71,10 @@ export function useTransactions() {
   });
 
   const assignMutation = api.transactions.assignCategory.useMutation({
-    onSettled: () => utils.transactions.getTransactions.invalidate(),
+    onSettled: () => {
+      void utils.transactions.getTransactions.invalidate();
+      void utils.budget.getHome.invalidate();
+    },
   });
 
   return {

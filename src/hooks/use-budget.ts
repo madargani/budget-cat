@@ -1,5 +1,6 @@
 "use client";
 
+import { currentMonth, type Month } from "~/lib/month";
 import { api, type RouterOutputs } from "~/trpc/react";
 
 type BudgetOverview = RouterOutputs["budget"]["getHome"];
@@ -7,8 +8,10 @@ type BudgetOverview = RouterOutputs["budget"]["getHome"];
 const createTempId = () => `temp-${crypto.randomUUID()}`;
 
 /**
- * Owns all budget data logic for the home screen: the `getHome` query plus the
- * add-group / add-category mutations with optimistic cache updates.
+ * Owns all budget data logic for the home screen: the month-scoped `getHome`
+ * query plus the add-group / add-category mutations with optimistic cache
+ * updates. Defaults to the current month for screens that only need the
+ * category list.
  *
  * Optimistic strategy per mutation:
  * 1. Cancel in-flight refetches so they can't clobber the optimistic write.
@@ -17,10 +20,15 @@ const createTempId = () => `temp-${crypto.randomUUID()}`;
  * 4. On error, roll back to the snapshot.
  * 5. Refetch (`invalidate`) to converge with the server.
  */
-export function useBudget() {
+export function useBudget(month: Month = currentMonth()) {
   const utils = api.useUtils();
+  const monthInput = { year: month.year, month: month.month };
 
-  const { data: budget, isLoading, isError } = api.budget.getHome.useQuery();
+  const {
+    data: budget,
+    isLoading,
+    isError,
+  } = api.budget.getHome.useQuery(monthInput);
 
   const rollback = (
     _error: unknown,
@@ -28,7 +36,7 @@ export function useBudget() {
     context?: { previous?: BudgetOverview },
   ) => {
     if (context?.previous) {
-      utils.budget.getHome.setData(undefined, context.previous);
+      utils.budget.getHome.setData(monthInput, context.previous);
     }
   };
 
@@ -38,12 +46,12 @@ export function useBudget() {
 
   const addGroupMutation = api.budget.addCategoryGroup.useMutation({
     onMutate: async (input) => {
-      await utils.budget.getHome.cancel();
+      await utils.budget.getHome.cancel(monthInput);
 
-      const previous = utils.budget.getHome.getData();
+      const previous = utils.budget.getHome.getData(monthInput);
       const tempId = createTempId();
 
-      utils.budget.getHome.setData(undefined, (old) => {
+      utils.budget.getHome.setData(monthInput, (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -58,7 +66,7 @@ export function useBudget() {
     },
     onSuccess: (created, _input, context) => {
       if (!context) return;
-      utils.budget.getHome.setData(undefined, (old) => {
+      utils.budget.getHome.setData(monthInput, (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -80,12 +88,12 @@ export function useBudget() {
 
   const addCategoryMutation = api.budget.addCategory.useMutation({
     onMutate: async (input) => {
-      await utils.budget.getHome.cancel();
+      await utils.budget.getHome.cancel(monthInput);
 
-      const previous = utils.budget.getHome.getData();
+      const previous = utils.budget.getHome.getData(monthInput);
       const tempId = createTempId();
 
-      utils.budget.getHome.setData(undefined, (old) => {
+      utils.budget.getHome.setData(monthInput, (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -107,7 +115,7 @@ export function useBudget() {
     },
     onSuccess: (created, _input, context) => {
       if (!context) return;
-      utils.budget.getHome.setData(undefined, (old) => {
+      utils.budget.getHome.setData(monthInput, (old) => {
         if (!old) return old;
         return {
           ...old,
