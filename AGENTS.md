@@ -10,8 +10,7 @@ This document is the single source of truth for where code goes and how it is wr
 | `src/components/ui/` | Shared, generic UI primitives (shadcn base: button, input, card, dialog…) | No feature logic, no data fetching, no imports from `src/components/home/` etc. |
 | `src/components/<feature>/` | Feature-specific UI (e.g. `home/`, `transactions/`, `auth/`, `bank/`, `layout/`) | One component per file; filename matches the exported component name (`AddBudgetItem` → `add-budget-item.tsx`). |
 | `src/hooks/` | Custom React hooks — data fetching and UI state logic | Hooks own TanStack Query (tRPC) usage and form logic. Components call hooks; they do not call `api.xxx.useQuery` directly unless trivial. |
-| `src/lib/` | Pure utilities, formatters, date helpers | No React, no Prisma, no tRPC, no mock data imported by production code. |
-| `src/__mocks__/` | Dev-only fixtures | Never imported by production code. |
+| `src/lib/` | Pure utilities, formatters, date helpers | No React, no Prisma, no tRPC. |
 | `src/server/db.ts` | Prisma client singleton | Imported only from server code (`"use server"` or tRPC routers/services). |
 | `src/server/services/` | Business logic — pure functions that take primitives/IDs and return data | Used by tRPC routers. No React, no HTTP, no TanStack Query. |
 | `src/server/actions/` | Server Actions (`"use server"`) | Imported by client components to mutate/redirect. Validate inputs with Zod schemas. |
@@ -40,10 +39,9 @@ This document is the single source of truth for where code goes and how it is wr
   - tRPC inputs: `.input(zodSchema)` in the router.
   - React forms: `react-hook-form` + `@hookform/resolvers` zod resolver.
   - Never do manual validation (`.trim()`, truthiness checks, length checks) inside components or procedures.
-- **Types come from Zod or Prisma.** Use `z.infer<typeof schema>` and `Prisma.$InferResult<...>`. Do not hand-write duplicate types, and never define domain types inside mock-data files.
+- **Types come from Zod or Prisma.** Use `z.infer<typeof schema>` and `Prisma.$InferResult<...>`. Do not hand-write duplicate types.
 - **TanStack Query via tRPC for server state.** Use `api.xxx.useQuery()` and `api.xxx.useMutation()` from `~/trpc/react`. Do not use `useState`/`useEffect` to hold server-fetched data.
 - **Client state only in hooks.** Local UI state (open/closed, draft form values) may live in components, but prefer lifting it into a hook when the logic is non-trivial.
-- **Mock data is dev-only.** Production pages must never import from mock files. Keep fixtures behind dev flags or move them to `__mocks__/`.
 
 ## 4. Client / server boundary
 
