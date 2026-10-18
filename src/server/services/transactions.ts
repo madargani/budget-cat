@@ -1,3 +1,4 @@
+import { monthRange, type Month } from "~/lib/month";
 import { db } from "~/server/db";
 import { plaidClient } from "~/server/plaid/client";
 
@@ -130,6 +131,56 @@ export async function getTransactions({
     items,
     nextCursor,
   };
+}
+
+/**
+ * Returns a single category's transactions for one month, newest first. This
+ * backs the category detail sheet, which has to reconcile against the same
+ * month window `getHome` sums spend over, so both use `monthRange`.
+ *
+ * Unlike the paginated `getTransactions`, this is capped rather than
+ * paginated — a month's worth of rows in one category is small enough to
+ * render, and a bounded result is simpler than threading a cursor through a
+ * sheet. Returns `null` when the category isn't the user's, so the router can
+ * surface a NOT_FOUND.
+ */
+export async function getCategoryTransactions({
+  userId,
+  categoryId,
+  month,
+  limit = 100,
+}: {
+  userId: string;
+  categoryId: string;
+  month: Month;
+  limit?: number;
+}) {
+  const category = await db.category.findFirst({
+    where: { id: categoryId, group: { userId } },
+    select: { id: true },
+  });
+
+  if (!category) {
+    return null;
+  }
+
+  const { start, end } = monthRange(month);
+
+  return db.transaction.findMany({
+    take: limit,
+    where: { userId, categoryId: category.id, date: { gte: start, lt: end } },
+    orderBy: [{ date: "desc" }, { id: "desc" }],
+    select: {
+      id: true,
+      name: true,
+      merchantName: true,
+      amount: true,
+      date: true,
+      categoryId: true,
+      plaidCategory: true,
+      pending: true,
+    },
+  });
 }
 
 /**

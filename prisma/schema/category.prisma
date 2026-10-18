@@ -22,6 +22,7 @@ model Category {
   groupId      String
   group        CategoryGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  allocations  Allocation[]
 
   @@unique([groupId, name])
   @@index([groupId, order])

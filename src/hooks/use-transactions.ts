@@ -2,10 +2,26 @@
 
 import { useMemo } from "react";
 
-import { api, type RouterOutputs } from "~/trpc/react";
+import { api } from "~/trpc/react";
 
-type TransactionRecord =
-  RouterOutputs["transactions"]["getTransactions"]["items"][number];
+/**
+ * The fields the transaction UI renders, shared by every transaction query.
+ * `getTransactions` returns the full Prisma record (with the `category`
+ * relation), while the category-scoped query selects a narrower row and
+ * omits it — so the mapper takes the structural minimum rather than one
+ * concrete query output.
+ */
+export type TransactionRecordLike = {
+  id: string;
+  name: string;
+  merchantName: string | null;
+  amount: number;
+  date: Date;
+  categoryId: string | null;
+  plaidCategory: string | null;
+  pending: boolean;
+  category?: { name: string } | null;
+};
 
 /**
  * Presentation projection of a Prisma transaction. The API returns Prisma's
@@ -26,7 +42,9 @@ export type TransactionItem = {
   unassigned: boolean;
 };
 
-function toTransactionItem(record: TransactionRecord): TransactionItem {
+export function toTransactionItem(
+  record: TransactionRecordLike,
+): TransactionItem {
   return {
     id: record.id,
     name: record.name,
@@ -55,11 +73,8 @@ function toTransactionItem(record: TransactionRecord): TransactionItem {
 export function useTransactions() {
   const utils = api.useUtils();
 
-  const {
-    data,
-    isLoading,
-    isError,
-  } = api.transactions.getTransactions.useQuery({});
+  const { data, isLoading, isError } =
+    api.transactions.getTransactions.useQuery({});
 
   const transactions = useMemo(
     () => (data?.items ?? []).map(toTransactionItem),

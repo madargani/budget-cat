@@ -143,6 +143,49 @@ export function useBudget(month: Month = currentMonth()) {
     onSettled: invalidateHome,
   });
 
+  // Both allocation mutations patch the cached `allocated` for one category
+  // instead of appending rows, so the home card and the open detail sheet
+  // update from the same write and stay in sync with each other.
+  const setCachedAllocation = (categoryId: string, allocated: number) => {
+    utils.budget.getHome.setData(monthInput, (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        groups: old.groups.map((group) => ({
+          ...group,
+          categories: group.categories.map((category) =>
+            category.id === categoryId ? { ...category, allocated } : category,
+          ),
+        })),
+      };
+    });
+  };
+
+  const allocateMutation = api.budget.setAllocation.useMutation({
+    onMutate: async (input) => {
+      await utils.budget.getHome.cancel(monthInput);
+      const previous = utils.budget.getHome.getData(monthInput);
+      setCachedAllocation(input.categoryId, input.amount);
+      return { previous };
+    },
+    onError: rollback,
+    onSettled: invalidateHome,
+  });
+
+  const copyMutation = api.budget.copyAllocation.useMutation({
+    onMutate: async () => {
+      await utils.budget.getHome.cancel(monthInput);
+      return { previous: utils.budget.getHome.getData(monthInput) };
+    },
+    // The server computes the leftover, so the response *is* the value to
+    // show — the cache can't be patched until it arrives.
+    onSuccess: (result, input) => {
+      setCachedAllocation(input.categoryId, result.remaining);
+    },
+    onError: rollback,
+    onSettled: invalidateHome,
+  });
+
   return {
     budget,
     isLoading,
@@ -150,5 +193,11 @@ export function useBudget(month: Month = currentMonth()) {
     addGroup: (name: string) => addGroupMutation.mutate({ name }),
     addCategory: (groupId: string, name: string) =>
       addCategoryMutation.mutate({ groupId, name }),
+    allocate: (categoryId: string, amount: number) =>
+      allocateMutation.mutate({ categoryId, amount, ...monthInput }),
+    copyPreviousAllocation: (categoryId: string) =>
+      copyMutation.mutate({ categoryId, ...monthInput }),
+    isAllocating: allocateMutation.isPending,
+    isCopying: copyMutation.isPending,
   };
 }

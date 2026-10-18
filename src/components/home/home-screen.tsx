@@ -1,9 +1,10 @@
 "use client";
 
 import { Loader2, TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { AddBudgetItem } from "~/components/home/add-budget-item";
+import { CategoryDetailDialog } from "~/components/home/category-detail-dialog";
 import { CategoryGroups } from "~/components/home/category-groups";
 import { HomeHeader } from "~/components/home/home-header";
 import { ReadyToAssign } from "~/components/home/ready-to-assign";
@@ -25,8 +26,34 @@ export function HomeScreen({
   user: { name: string; email: string };
 }) {
   const [month, setMonth] = useState<Month>(() => currentMonth());
-  const { budget, isLoading, isError, addGroup, addCategory } =
-    useBudget(month);
+  // Holds the id rather than the category object so the sheet always reads the
+  // live row out of the query cache and re-renders when it changes.
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
+
+  const {
+    budget,
+    isLoading,
+    isError,
+    addGroup,
+    addCategory,
+    allocate,
+    copyPreviousAllocation,
+    isAllocating,
+    isCopying,
+  } = useBudget(month);
+
+  const selectedCategory = useMemo(() => {
+    if (!selectedCategoryId) return null;
+    for (const group of budget?.groups ?? []) {
+      const match = group.categories.find(
+        (category) => category.id === selectedCategoryId,
+      );
+      if (match) return match;
+    }
+    return null;
+  }, [budget, selectedCategoryId]);
 
   return (
     <div className="flex flex-col gap-4 pb-6">
@@ -55,7 +82,12 @@ export function HomeScreen({
           </div>
 
           {budget.groups.length > 0 ? (
-            <CategoryGroups groups={budget.groups} />
+            <CategoryGroups
+              groups={budget.groups}
+              onSelectCategory={(category) =>
+                setSelectedCategoryId(category.id)
+              }
+            />
           ) : (
             <p className="text-muted-foreground px-4 text-sm">
               No categories yet. Add a category group to get started.
@@ -74,6 +106,16 @@ export function HomeScreen({
               <TransactionsTester />
             </CardContent>
           </Card>
+
+          <CategoryDetailDialog
+            category={selectedCategory}
+            month={month}
+            onClose={() => setSelectedCategoryId(null)}
+            onAllocate={allocate}
+            onCopyPrevious={copyPreviousAllocation}
+            isAllocating={isAllocating}
+            isCopying={isCopying}
+          />
         </>
       )}
     </div>

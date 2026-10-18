@@ -9,7 +9,7 @@ export function TransactionRow({
   onClick,
 }: {
   transaction: TransactionItem;
-  onClick: () => void;
+  onClick?: () => void;
 }) {
   const isSpend = transaction.amount < 0;
   const subtitle =
@@ -17,12 +17,16 @@ export function TransactionRow({
     transaction.category ??
     transaction.plaidCategory;
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="hover:bg-muted/60 active:bg-muted flex w-full items-center gap-3 rounded-xl py-3 text-left transition-colors"
-    >
+  // Read-only contexts (the category sheet's transaction list) omit `onClick`,
+  // and the row drops its button affordance rather than rendering a control
+  // that does nothing.
+  const className = cn(
+    "flex w-full items-center gap-3 rounded-xl py-3 text-left transition-colors",
+    onClick && "hover:bg-muted/60 active:bg-muted cursor-pointer",
+  );
+
+  const content = (
+    <>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-sm font-medium">{transaction.name}</p>
         <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
@@ -48,6 +52,16 @@ export function TransactionRow({
       >
         {formatTransactionAmount(transaction.amount)}
       </p>
+    </>
+  );
+
+  if (!onClick) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
     </button>
   );
 }

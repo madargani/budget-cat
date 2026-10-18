@@ -1,0 +1,26 @@
+/// Money the user assigned to a Category for a single calendar month.
+///
+/// One row per (category, year, month). `month` is 0-indexed so it matches the
+/// `Month` type in `src/lib/month.ts` and the tRPC inputs, avoiding an
+/// off-by-one between the budget API and this table.
+///
+/// An allocation is the *budgeted* amount, not a rollup: spending is derived
+/// from `Transaction` rows by `~/server/services/budget`. The difference
+/// (allocated - spent) is what rolls forward when a month is copied into the
+/// next one.
+model Allocation {
+  id         String   @id @default(cuid())
+  amount     Float
+  year       Int
+  month      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, year, month])
+  @@index([userId, year, month])
+  @@map("allocation")
+}

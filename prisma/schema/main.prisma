@@ -28,6 +28,7 @@ model User {
   items          Item[]
   transactions   Transaction[]
   categoryGroups CategoryGroup[]
+  allocations    Allocation[]
 
   @@unique([email])
   @@map("user")
