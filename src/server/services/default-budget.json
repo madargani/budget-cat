@@ -1,0 +1,6 @@
+[
+  { "name": "Income", "categories": ["Paycheck"] },
+  { "name": "Needs", "categories": ["Housing", "Groceries", "Transport"] },
+  { "name": "Wants", "categories": ["Dining", "Entertainment", "Shopping"] },
+  { "name": "Savings", "categories": ["Emergency Fund"] }
+]

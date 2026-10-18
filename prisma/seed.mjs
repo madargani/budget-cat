@@ -6,14 +6,13 @@ import process from "node:process";
 
 import { PrismaClient } from "../generated/prisma/client.js";
 
+// Shared with the app: the same list is seeded on user creation by
+// `src/server/services/default-budget.ts`, which imports this file.
+import groupTemplates from "../src/server/services/default-budget.json" with { type: "json" };
+
 process.loadEnvFile(".env");
 
 const db = new PrismaClient();
-
-const groupTemplates = [
-  { name: "Needs", categories: ["Housing", "Groceries", "Transport"] },
-  { name: "Wants", categories: ["Dining", "Entertainment", "Shopping"] },
-];
 
 async function main() {
   const users = await db.user.findMany({ select: { id: true } });
@@ -29,7 +28,7 @@ async function main() {
     for (const [groupIndex, group] of groupTemplates.entries()) {
       const categoryGroup = await db.categoryGroup.upsert({
         where: { userId_name: { userId: user.id, name: group.name } },
-        update: {},
+        update: { order: groupIndex },
         create: { name: group.name, order: groupIndex, userId: user.id },
       });
 
